@@ -1,10 +1,11 @@
 """启动麦麦护栏：连接官方 MCP，在本机开一个 MCP 服务给 AI 客户端用。"""
 
 import threading
+from datetime import date
 
-from audit import cleanup_old_audit, spent_fen, write_audit
+from audit import cleanup_old_audit, read_audit, spent_fen, write_audit
 from config import GUARD_HOST, GUARD_PORT, MCP_TOKEN_ENV, MCP_URL, POLICY_FILE
-from console_confirm import confirm, start_reader
+from confirm import confirm, start_reader
 from logger import log
 from mcp_client import call_tool_raw, close_session, list_tools, open_session
 from policy import load_policy
@@ -70,12 +71,14 @@ def main(host, port, policy_path, upstream_url):
                 "audit": write_audit,
                 "calc_props": calc_props_of(tools),
             },
+            "recent": lambda: read_audit(date.today())[-50:],
         }
         start_reader()
         server = create_server(host, port, state)
         log(f"麦麦护栏已启动: 地址=http://{host}:{port}/mcp, 模式={policy['mode']}, "
             f"单笔上限={policy['max_order_yuan']}元, 当天上限={policy['max_daily_yuan']}元")
         log("在 AI 客户端里把麦当劳 MCP 的地址换成上面的地址，不需要再填 Token。写操作会在这个窗口里请你确认。")
+        log(f"网页面板: http://{host}:{port}/ （确认时需要输入只显示在这个窗口里的确认码）")
         server.serve_forever()
     except KeyboardInterrupt:
         log("收到 Ctrl+C，护栏退出")

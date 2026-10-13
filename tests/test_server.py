@@ -27,7 +27,7 @@ class ServerTest(unittest.TestCase):
 
     def start(self, env):
         """启动护栏服务，返回地址。"""
-        state = {"tools": UPSTREAM_TOOLS, "policy": env.policy, "ctx": env.ctx()}
+        state = {"tools": UPSTREAM_TOOLS, "policy": env.policy, "ctx": env.ctx(), "recent": lambda: []}
         server = create_server("127.0.0.1", 0, state)
         threading.Thread(target=server.serve_forever, daemon=True).start()
         self.addCleanup(server.server_close)

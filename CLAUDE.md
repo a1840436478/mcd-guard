@@ -26,8 +26,9 @@
 | `policy.py` | 读取 `policy.json`（不提交）并与默认策略合并、校验 |
 | `audit.py` | 审计日志 `audit/日期.jsonl`（保留 90 天），统计当天/本周已确认消费 |
 | `guard.py` | 核心判断：放行 / 拦截 / 本机确认；下单前用 calculate-price 核价并检查限额 |
-| `console_confirm.py` | 在护栏终端显示确认卡片并读取用户输入 |
-| `server.py` | 本地 MCP 服务（只返回 JSON），改写工具列表、校验 Origin |
+| `confirm.py` | 写操作确认：护栏终端输入 y/n，或网页面板输入只显示在终端的确认码 |
+| `panel.py` | 本地网页面板页面与数据 |
+| `server.py` | 本地 MCP 服务（只返回 JSON）与网页面板路由，改写工具列表、校验 Host 和 Origin |
 | `run_guard.py` | 启动入口 |
 | `probe_mcp.py` | 手动连通性检查，输出 `data/tools.json` |
 

@@ -1,7 +1,8 @@
-"""护栏的本地 MCP 服务（Streamable HTTP，只返回 JSON，不开 SSE 流）。
+"""护栏的本地 MCP 服务（Streamable HTTP，只返回 JSON，不开 SSE 流）和网页面板。
 
 AI 客户端连接本服务，护栏按策略处理后再转发给官方 MCP。
-state = {"tools": 上游工具列表, "policy": 策略, "ctx": guard.handle_call 用的依赖}
+state = {"tools": 上游工具列表, "policy": 策略, "ctx": guard.handle_call 用的依赖, "recent": fn() -> 今天的审计记录}
+网页面板：GET / 页面，GET /api/state 数据，POST /api/decide 用确认码确认。
 """
 
 import json
@@ -9,8 +10,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
 from config import CLIENT_VERSION
+from confirm import answer_from_web
 from guard import GUARD_TAG, handle_call, is_write_tool, text_result
 from logger import log
+from panel import PANEL_HTML, build_panel_state
 
 SUPPORTED_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 LOCAL_HOSTS = ("localhost", "127.0.0.1", "::1")
@@ -56,6 +59,16 @@ def is_local_origin(origin):
     if not origin:
         return True
     return urlparse(origin).hostname in LOCAL_HOSTS
+
+
+def is_local_host(host):
+    """
+    校验 Host 头只能是本机地址，防止 DNS 重绑定后的网页读取面板数据。
+
+    :param host: Host 头的值，如 127.0.0.1:1024
+    :return: bool
+    """
+    return bool(host) and urlparse(f"//{host}").hostname in LOCAL_HOSTS
 
 
 def _rpc_error(req_id, code, message):
@@ -123,21 +136,53 @@ def make_handler(state):
             self.end_headers()
             self.wfile.write(body)
 
+        def _send_html(self, html):
+            body = html.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def _check_local(self):
+            """Host 和 Origin 都必须是本机，否则返回 403。"""
+            if is_local_host(self.headers.get("Host")) and is_local_origin(self.headers.get("Origin")):
+                return True
+            log(f"拒绝非本机来源的请求: Host={self.headers.get('Host')}, Origin={self.headers.get('Origin')}", "WARNING")
+            self._send(403, _rpc_error(None, -32000, "只接受本机请求"))
+            return False
+
+        def _read_json(self):
+            """读取 JSON 请求体，失败返回 None 并已回复 400。"""
+            try:
+                return json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)))
+            except (ValueError, json.JSONDecodeError):
+                self._send(400, _rpc_error(None, -32700, "请求体不是合法的 JSON"))
+                return None
+
         def do_GET(self):
-            self._send(405, _rpc_error(None, -32000, "本服务不提供 SSE 流，请用 POST"))
+            if not self._check_local():
+                return
+            path = urlparse(self.path).path
+            if path in ("/", "/panel"):
+                self._send_html(PANEL_HTML)
+            elif path == "/api/state":
+                self._send(200, build_panel_state(state))
+            else:
+                self._send(405, _rpc_error(None, -32000, "本服务不提供 SSE 流，请用 POST"))
 
         def do_DELETE(self):
             self._send(200)
 
         def do_POST(self):
-            if not is_local_origin(self.headers.get("Origin")):
-                log(f"拒绝非本机来源的请求: Origin={self.headers.get('Origin')}", "WARNING")
-                self._send(403, _rpc_error(None, -32000, "只接受本机请求"))
+            if not self._check_local():
                 return
-            try:
-                msg = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)))
-            except (ValueError, json.JSONDecodeError):
-                self._send(400, _rpc_error(None, -32700, "请求体不是合法的 JSON"))
+            path = urlparse(self.path).path
+            if path == "/api/decide":
+                self._handle_decide()
+                return
+            msg = self._read_json()
+            if msg is None:
                 return
             if not isinstance(msg, dict):
                 self._send(400, _rpc_error(None, -32600, "不支持批量请求"))
@@ -147,6 +192,17 @@ def make_handler(state):
                 self._send(202)
             else:
                 self._send(200, response)
+
+        def _handle_decide(self):
+            """网页面板提交确认结果；只接受 JSON，跨站表单无法伪造。"""
+            if "application/json" not in (self.headers.get("Content-Type") or ""):
+                self._send(415, {"ok": False, "message": "只接受 JSON"})
+                return
+            body = self._read_json()
+            if not isinstance(body, dict):
+                return
+            ok, message = answer_from_web(body.get("id"), body.get("code"), bool(body.get("approve")))
+            self._send(200, {"ok": ok, "message": message})
 
     return GuardHandler
 
