@@ -25,7 +25,7 @@ def _get_logger():
         return _state["logger"]
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     _cleanup_old_logs()
-    logger = logging.getLogger("mcbench")
+    logger = logging.getLogger("mcd-guard")
     logger.setLevel(logging.DEBUG)
     logger.propagate = False
     for handler in list(logger.handlers):

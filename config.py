@@ -18,5 +18,5 @@ MCP_RETRY_TIMES = 3  # 遇到 429 限流时的最多重试次数
 MCP_RETRY_WAIT = 5  # 429 重试前等待的秒数（逐次翻倍）
 
 # 客户端标识
-CLIENT_NAME = "mcbench"
+CLIENT_NAME = "mcd-guard"
 CLIENT_VERSION = "0.1.0"

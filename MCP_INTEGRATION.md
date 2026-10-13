@@ -4,4 +4,4 @@
 
 - 服务地址：`https://mcp.mcd.cn`
 - 传输：Streamable HTTP，`Authorization: Bearer ${MCD_MCP_TOKEN}`
-- 客户端：`mcp_client.py`，只用 Python 标准库
+- 上游客户端：`mcp_client.py`，只用 Python 标准库
