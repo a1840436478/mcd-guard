@@ -99,6 +99,19 @@ claude mcp add --transport http mcd-guard http://127.0.0.1:1024/mcp
 
 已实测：Claude Code。其他支持 Streamable HTTP 的 MCP 客户端（如 WorkBuddy 的自定义连接器）按上面的 JSON 配置即可，欢迎反馈。
 
+**只支持 stdio 的客户端**可以用只读模式：护栏由客户端启动，没有自己的终端窗口，没法让你确认，所以写操作全部隐藏并拦截，只能查菜单、算价格、看订单，下单请回到麦当劳 App 或改用上面的 HTTP 方式。
+
+```json
+{
+  "mcpServers": {
+    "mcd-guard-readonly": {
+      "command": "python",
+      "args": ["/你的路径/mcd-guard/run_stdio.py"]
+    }
+  }
+}
+```
+
 之后照常和 AI 说“帮我点一个麦辣鸡腿堡”。到下单那一步，护栏窗口会弹出：
 
 ```text

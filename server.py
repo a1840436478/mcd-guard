@@ -71,7 +71,7 @@ def is_local_host(host):
     return bool(host) and urlparse(f"//{host}").hostname in LOCAL_HOSTS
 
 
-def _rpc_error(req_id, code, message):
+def rpc_error(req_id, code, message):
     """组装 JSON-RPC 错误响应。"""
     return {"jsonrpc": "2.0", "id": req_id, "error": {"code": code, "message": message}}
 
@@ -110,7 +110,7 @@ def handle_rpc(msg, state):
             log(f"处理工具调用出错: 工具={params.get('name')}, 原因={e}", "ERROR")
             result = text_result(f"{GUARD_TAG}调用官方 MCP 出错：{e}")
     else:
-        return _rpc_error(req_id, -32601, f"不支持的方法: {method}")
+        return rpc_error(req_id, -32601, f"不支持的方法: {method}")
     return {"jsonrpc": "2.0", "id": req_id, "result": result}
 
 
@@ -149,7 +149,7 @@ def make_handler(state):
             if is_local_host(self.headers.get("Host")) and is_local_origin(self.headers.get("Origin")):
                 return True
             log(f"拒绝非本机来源的请求: Host={self.headers.get('Host')}, Origin={self.headers.get('Origin')}", "WARNING")
-            self._send(403, _rpc_error(None, -32000, "只接受本机请求"))
+            self._send(403, rpc_error(None, -32000, "只接受本机请求"))
             return False
 
         def _read_json(self):
@@ -157,7 +157,7 @@ def make_handler(state):
             try:
                 return json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)))
             except (ValueError, json.JSONDecodeError):
-                self._send(400, _rpc_error(None, -32700, "请求体不是合法的 JSON"))
+                self._send(400, rpc_error(None, -32700, "请求体不是合法的 JSON"))
                 return None
 
         def do_GET(self):
@@ -169,7 +169,7 @@ def make_handler(state):
             elif path == "/api/state":
                 self._send(200, build_panel_state(state))
             else:
-                self._send(405, _rpc_error(None, -32000, "本服务不提供 SSE 流，请用 POST"))
+                self._send(405, rpc_error(None, -32000, "本服务不提供 SSE 流，请用 POST"))
 
         def do_DELETE(self):
             self._send(200)
@@ -185,7 +185,7 @@ def make_handler(state):
             if msg is None:
                 return
             if not isinstance(msg, dict):
-                self._send(400, _rpc_error(None, -32600, "不支持批量请求"))
+                self._send(400, rpc_error(None, -32600, "不支持批量请求"))
                 return
             response = handle_rpc(msg, state)
             if response is None:

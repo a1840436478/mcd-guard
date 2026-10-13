@@ -7,7 +7,7 @@ from datetime import date
 
 from config import LOG_DIR, LOG_KEEP_DAYS
 
-_state = {"date": None, "logger": None}
+_state = {"date": None, "logger": None, "stream": sys.stdout}
 
 
 def _cleanup_old_logs():
@@ -33,13 +33,22 @@ def _get_logger():
         handler.close()
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
     for handler in (
-        logging.StreamHandler(sys.stdout),
+        logging.StreamHandler(_state["stream"]),
         logging.FileHandler(LOG_DIR / f"{today}.log", encoding="utf-8"),
     ):
         handler.setFormatter(fmt)
         logger.addHandler(handler)
     _state["date"], _state["logger"] = today, logger
     return logger
+
+
+def use_stderr():
+    """
+    控制台日志改写到标准错误。stdio 模式下标准输出只能传 MCP 消息。
+
+    :return: None
+    """
+    _state["stream"], _state["date"] = sys.stderr, None
 
 
 def log(msg, level="INFO"):

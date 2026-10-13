@@ -32,6 +32,7 @@
 | `server.py` | 本地 MCP 服务（只返回 JSON）与网页面板路由，改写工具列表、校验 Host 和 Origin |
 | `run_guard.py` | 启动入口 |
 | `run_demo.py` / `demo_upstream.py` | 演示模式：虚构门店和餐品的模拟服务，不连官方、不需要 Token，审计写到 `audit-demo/` |
+| `run_stdio.py` / `stdio_server.py` | stdio 只读模式（没有终端可确认，写操作一律隐藏拦截），日志改走 stderr |
 | `probe_mcp.py` | 手动连通性检查，输出 `data/tools.json` |
 
 只提交和参赛作品相关的文件。开发辅助文件（`probe_mcp.py`、`tools/`、`data/`）只留本地，已写进 `.gitignore`。

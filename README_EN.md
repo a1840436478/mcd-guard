@@ -26,7 +26,7 @@ The official MCP service rules state that holding the token means holding full o
 | Web panel | `http://127.0.0.1:1024/` shows pending requests, today's spending and the audit log; Host/Origin checks block DNS rebinding |
 | No retry hints | On reject, timeout or over-limit, the guard tells the AI not to retry or split the order |
 
-Pure Python standard library, zero dependencies, 41 unit tests.
+Pure Python standard library, zero dependencies, 43 unit tests.
 
 ## Quick start
 
@@ -56,6 +56,8 @@ Point your AI client at the guard instead of the official server (no token neede
 ```
 
 For Claude Code: `claude mcp add --transport http mcd-guard http://127.0.0.1:1024/mcp`
+
+stdio-only clients can launch `python run_stdio.py` instead. With no terminal to confirm in, it runs read-only: write tools are hidden and blocked.
 
 Policy (`policy.json`, see [policy.example.json](policy.example.json)): `mode` (`confirm` / `readonly`), `max_order_yuan`, `max_daily_yuan`, `max_weekly_yuan`, `blocked_tools`, `confirm_timeout_sec`.
 
