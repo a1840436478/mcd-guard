@@ -1,0 +1,5 @@
+.trash/
+logs/
+__pycache__/
+.env
+output/
