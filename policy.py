@@ -2,7 +2,7 @@
 
 import json
 
-from config import DEFAULT_POLICY
+from config import DEFAULT_POLICY, NO_AUTO_ALLOW_TOOLS, TOOL_RULES
 from logger import log
 
 
@@ -21,6 +21,23 @@ def validate_policy(policy):
             raise RuntimeError(f"策略字段必须是正数: {key}={value}")
     if not isinstance(policy["blocked_tools"], list):
         raise RuntimeError(f"策略 blocked_tools 必须是列表: blocked_tools={policy['blocked_tools']}")
+    validate_tool_rules(policy["tool_rules"])
+
+
+def validate_tool_rules(rules):
+    """
+    校验 tool_rules：工具名到 allow / confirm / block 的映射。
+
+    :param rules: tool_rules 字段
+    :return: None
+    """
+    if not isinstance(rules, dict):
+        raise RuntimeError(f"策略 tool_rules 必须是对象，如 {{\"auto-bind-coupons\": \"allow\"}}: tool_rules={rules}")
+    for name, rule in rules.items():
+        if rule not in TOOL_RULES:
+            raise RuntimeError(f"策略 tool_rules 的规则只能是 {'/'.join(TOOL_RULES)}: 工具={name}, 规则={rule}")
+        if rule == "allow" and name in NO_AUTO_ALLOW_TOOLS:
+            raise RuntimeError(f"这个工具可能花钱但护栏没法核实金额，不能设为 allow: 工具={name}")
 
 
 def load_policy(path):

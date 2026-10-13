@@ -32,6 +32,29 @@ def is_write_tool(name):
     return name not in READ_ONLY_TOOLS
 
 
+def tool_rule(name, policy):
+    """
+    工具在当前策略下的规则：blocked_tools 优先，其次 tool_rules，最后按读写默认。
+
+    :param name: 工具名
+    :param policy: 策略 dict
+    :return: "allow"、"confirm" 或 "block"
+    """
+    if name in policy["blocked_tools"]:
+        return "block"
+    return policy["tool_rules"].get(name) or ("confirm" if is_write_tool(name) else "allow")
+
+
+def auto_allowed_writes(policy):
+    """
+    设成不用确认就放行的写操作。
+
+    :param policy: 策略 dict
+    :return: list[str]
+    """
+    return sorted(n for n, r in policy["tool_rules"].items() if r == "allow" and is_write_tool(n))
+
+
 def tool_label(name):
     """
     工具的中文名，未知工具返回原名。
@@ -176,16 +199,17 @@ def handle_call(name, arguments, ctx):
         log(f"处理调用: 工具={name}, 结论={decision}")
         return result
 
-    if name in policy["blocked_tools"]:
+    rule = tool_rule(name, policy)
+    if rule == "block":
         return finish("blocked", text_result(
             f"{GUARD_TAG}已拦截：用户在护栏策略中禁用了「{tool_label(name)}」，没有执行任何操作。不要重试，请告诉用户。"),
             reason="blocked_tools")
 
-    if not is_write_tool(name):
+    if not is_write_tool(name) and rule == "allow":
         result = ctx["upstream"](name, arguments)
         return finish("allowed", result, upstream_ok=_upstream_ok(result))
 
-    if policy["mode"] == "readonly":
+    if is_write_tool(name) and policy["mode"] == "readonly":
         return finish("blocked", text_result(
             f"{GUARD_TAG}已拦截：当前是只读模式，不允许「{tool_label(name)}」，没有执行任何操作。"
             "不要重试；如确需执行，请用户把护栏策略的 mode 改为 confirm。"), reason="readonly")
@@ -206,6 +230,10 @@ def handle_call(name, arguments, ctx):
                 f"{GUARD_TAG}已拦截：{over}，没有下单。不要重试或拆单绕过，请告诉用户；如需调整上限，请用户修改护栏策略。"),
                 reason="limit")
 
+    if rule == "allow":
+        log(f"按用户规则直接放行写操作: 工具={name}", "WARNING")
+        return _forward_after_approval(name, arguments, ctx, finish, "allowed", reason="tool_rules")
+
     timeout = policy["confirm_timeout_sec"]
     answer = ctx["confirm"](build_card(name, arguments, policy, quote, spent), timeout)
     if answer == "no":
@@ -216,11 +244,25 @@ def handle_call(name, arguments, ctx):
             f"{GUARD_TAG}用户在 {timeout} 秒内没有确认「{tool_label(name)}」，已按拒绝处理，没有执行任何操作。"
             "请提醒用户到运行麦麦护栏的终端窗口确认后再试。"))
 
+    return _forward_after_approval(name, arguments, ctx, finish, "confirmed")
+
+
+def _forward_after_approval(name, arguments, ctx, finish, decision, **extra):
+    """
+    写操作获准（用户确认或规则放行）后转发给上游。
+
+    :param name: 工具名
+    :param arguments: 工具参数
+    :param ctx: 依赖集合
+    :param finish: 记审计并返回结果的函数
+    :param decision: 审计结论，confirmed 或 allowed
+    :return: 返回给 AI 的 MCP result dict
+    """
     try:
         result = ctx["upstream"](name, arguments)
     except RuntimeError as e:
-        return finish("confirmed", text_result(
-            f"{GUARD_TAG}用户已确认，但转发「{tool_label(name)}」时出错，操作结果未知：{e}。"
+        return finish(decision, text_result(
+            f"{GUARD_TAG}「{tool_label(name)}」已获准，但转发时出错，操作结果未知：{e}。"
             "不要直接重试，先用 order-list / query-order 等查询工具确认是否已经生效，再告诉用户。"),
-            upstream_ok=None, error=str(e))
-    return finish("confirmed", result, upstream_ok=_upstream_ok(result))
+            upstream_ok=None, error=str(e), **extra)
+    return finish(decision, result, upstream_ok=_upstream_ok(result), **extra)

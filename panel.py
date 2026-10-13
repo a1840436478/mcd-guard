@@ -1,6 +1,8 @@
 """本地网页面板：查看待确认请求、今日消费和审计记录，并用确认码确认写操作。"""
 
+from config import WRITE_TOOL_NAMES
 from confirm import get_pending
+from guard import is_write_tool, tool_label, tool_rule
 
 PANEL_HTML = r"""<!doctype html>
 <html lang="zh-CN">
@@ -22,7 +24,8 @@ button{font:inherit;padding:8px 16px;border-radius:8px;border:1px solid var(--li
 button.yes{background:var(--accent);border-color:var(--accent);color:#fff}.msg{color:var(--warn);min-height:1.6em;margin-top:8px}
 .empty{color:var(--dim)}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 th{color:var(--dim);font-weight:normal}.d-allowed{color:var(--ok)}.d-confirmed{color:var(--accent)}.d-blocked,.d-rejected,.d-timeout{color:var(--bad)}
-.wrap{overflow-x:auto}
+.wrap{overflow-x:auto}.rules{display:flex;flex-wrap:wrap;gap:8px}.rule{border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13px}
+.r-allow{color:var(--warn)}.r-confirm{color:var(--ok)}.r-block{color:var(--bad)}
 </style>
 </head>
 <body>
@@ -31,11 +34,13 @@ th{color:var(--dim);font-weight:normal}.d-allowed{color:var(--ok)}.d-confirmed{c
 <p class="sub">AI 想动你的麦当劳账号时，先过这里。确认码只显示在护栏终端里。</p>
 <section><h2>待确认</h2><div id="pending" class="empty">现在没有待确认的操作。</div></section>
 <section><h2>今日概况</h2><div class="stats" id="stats"></div></section>
+<section><h2>操作规则</h2><div class="rules" id="rules"></div></section>
 <section><h2>今天的审计记录</h2><div class="wrap"><table><thead><tr><th>时间</th><th>工具</th><th>结论</th><th>金额</th></tr></thead><tbody id="audit"></tbody></table></div></section>
 </main>
 <script>
 const LABEL={allowed:"放行",confirmed:"已确认",rejected:"已拒绝",timeout:"超时",blocked:"已拦截"};
-const REASON={readonly:"只读模式",limit:"超出消费上限",blocked_tools:"已禁用的工具",quote_failed:"核价失败"};
+const RULE={allow:"直接放行",confirm:"需确认",block:"拦截"};
+const REASON={tool_rules:"按规则直接放行",readonly:"只读模式",limit:"超出消费上限",blocked_tools:"已禁用的工具",quote_failed:"核价失败"};
 let shownId=null;
 const yuan=f=>"¥"+(f/100).toFixed(2);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -64,6 +69,7 @@ async function refresh(){
       ["模式",p.mode==="readonly"?"只读":"写操作需确认"],["今日已确认",`${yuan(s.spent_daily)} / ${yuan(p.max_daily_yuan*100)}`],
       ["本周已确认",`${yuan(s.spent_weekly)} / ${yuan(p.max_weekly_yuan*100)}`],["单笔上限",yuan(p.max_order_yuan*100)]
     ].map(([k,v])=>`<div class="stat"><span>${k}</span><b>${v}</b></div>`).join("");
+    document.getElementById("rules").innerHTML=s.rules.map(r=>`<span class="rule">${esc(r.label)}：<b class="r-${esc(r.rule)}">${p.mode==="readonly"&&r.write&&r.rule!=="block"?"拦截（只读）":RULE[r.rule]||esc(r.rule)}</b></span>`).join("");
     document.getElementById("audit").innerHTML=s.recent.length?s.recent.map(r=>`<tr><td>${esc(r.time.slice(11))}</td><td>${esc(r.tool)}</td>
 <td class="d-${esc(r.decision)}">${LABEL[r.decision]||esc(r.decision)}${r.reason?"（"+esc(REASON[r.reason]||r.reason)+"）":""}</td><td>${r.price_fen!=null?yuan(r.price_fen):""}</td></tr>`).join(""):'<tr><td colspan="4" class="empty">今天还没有调用。</td></tr>';
   }catch(e){}
@@ -89,5 +95,7 @@ def build_panel_state(state):
         "policy": state["policy"],
         "spent_daily": daily,
         "spent_weekly": weekly,
+        "rules": [{"tool": n, "label": tool_label(n), "rule": tool_rule(n, state["policy"]), "write": is_write_tool(n)}
+                  for n in [*WRITE_TOOL_NAMES, *sorted(set(state["policy"]["tool_rules"]) - set(WRITE_TOOL_NAMES))]],
         "recent": [{k: r.get(k) for k in ("time", "tool", "decision", "reason", "price_fen")} for r in recent],
     }

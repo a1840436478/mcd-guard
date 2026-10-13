@@ -51,6 +51,9 @@ WRITE_TOOL_NAMES = {
     "delivery-create-address": "新增配送地址",
 }
 
+TOOL_RULES = ("allow", "confirm", "block")  # tool_rules 可选的规则
+NO_AUTO_ALLOW_TOOLS = frozenset({"party-order-create"})  # 可能花钱但没法试算金额的工具，不允许设为 allow
+
 # 默认策略，policy.json 中的同名字段会覆盖这里
 DEFAULT_POLICY = {
     "mode": "confirm",  # confirm：写操作需本机确认；readonly：隐藏并拦截全部写操作
@@ -58,5 +61,6 @@ DEFAULT_POLICY = {
     "max_daily_yuan": 200,  # 当天已确认订单累计上限（元）
     "max_weekly_yuan": 600,  # 本周（周一起）已确认订单累计上限（元）
     "blocked_tools": [],  # 永远拦截的工具名，如 ["draw-lottery"]
+    "tool_rules": {},  # 逐个工具设置：allow 直接放行 / confirm 需确认 / block 拦截；没写的写操作按 confirm
     "confirm_timeout_sec": 120,  # 等待用户确认的秒数，超时视为拒绝
 }

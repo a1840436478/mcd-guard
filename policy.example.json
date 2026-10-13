@@ -3,6 +3,10 @@
   "max_order_yuan": 100,
   "max_daily_yuan": 200,
   "max_weekly_yuan": 600,
-  "blocked_tools": ["draw-lottery"],
+  "blocked_tools": [],
+  "tool_rules": {
+    "auto-bind-coupons": "allow",
+    "draw-lottery": "block"
+  },
   "confirm_timeout_sec": 120
 }

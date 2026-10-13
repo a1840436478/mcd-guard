@@ -7,6 +7,7 @@ from audit import cleanup_old_audit, read_audit, spent_fen, write_audit
 from config import AUDIT_DIR, DEMO_AUDIT_DIR, GUARD_HOST, GUARD_PORT, MCP_TOKEN_ENV, MCP_URL, POLICY_FILE
 from confirm import confirm, start_reader
 from demo_upstream import DEMO_TOOLS, demo_call
+from guard import auto_allowed_writes
 from logger import log
 from mcp_client import call_tool_raw, close_session, list_tools, open_session
 from policy import load_policy
@@ -78,6 +79,9 @@ def serve(host, port, state):
     :return: None
     """
     policy = state["policy"]
+    allowed = auto_allowed_writes(policy)
+    if allowed and policy["mode"] == "confirm":
+        log(f"注意：以下写操作按你的 tool_rules 不需要确认就会执行（下单仍受消费上限约束）: {', '.join(allowed)}", "WARNING")
     start_reader()
     server = create_server(host, port, state)
     try:

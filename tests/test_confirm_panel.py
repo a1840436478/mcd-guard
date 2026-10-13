@@ -92,6 +92,9 @@ class PanelTest(unittest.TestCase):
         data = json.loads(body)
         self.assertEqual((status, data["pending"], data["spent_daily"]), (200, None, 0))
         self.assertEqual(data["recent"][0]["tool"], "query-meals")
+        rules = {r["tool"]: r["rule"] for r in data["rules"]}
+        self.assertEqual(rules["create-order"], "confirm")
+        self.assertEqual(len(rules), 7)
 
     def test_foreign_host_rejected(self):
         status, _ = self.fetch("/api/state", headers={"Host": "evil.example:1024"})

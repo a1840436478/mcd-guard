@@ -20,13 +20,13 @@ The official MCP service rules state that holding the token means holding full o
 | Official price check | Before `create-order`, the guard calls the official `calculate-price` and shows store, items and amount on the confirmation card; if the price can't be verified, the order is blocked |
 | Spending limits | Per-order, daily and weekly caps; over-limit orders are blocked without even asking |
 | Read-only mode | Write tools are hidden from the tool list and blocked if called anyway |
-| Tool blocklist | e.g. never allow lottery draws: `"blocked_tools": ["draw-lottery"]` |
+| Per-tool rules | Set each tool to `allow` (no confirmation), `confirm` or `block`, e.g. `"tool_rules": {"auto-bind-coupons": "allow", "draw-lottery": "block"}`. Orders set to `allow` are still subject to spending limits |
 | Audit log | Every call is logged to `audit/DATE.jsonl` (kept 90 days), with phone numbers, names and addresses redacted |
 | Token stays local | AI clients connect to `127.0.0.1` and no longer need the token |
 | Web panel | `http://127.0.0.1:1024/` shows pending requests, today's spending and the audit log; Host/Origin checks block DNS rebinding |
 | No retry hints | On reject, timeout or over-limit, the guard tells the AI not to retry or split the order |
 
-Pure Python standard library, zero dependencies, 43 unit tests.
+Pure Python standard library, zero dependencies, 53 unit tests.
 
 ## Quick start
 
@@ -59,7 +59,7 @@ For Claude Code: `claude mcp add --transport http mcd-guard http://127.0.0.1:102
 
 stdio-only clients can launch `python run_stdio.py` instead. With no terminal to confirm in, it runs read-only: write tools are hidden and blocked.
 
-Policy (`policy.json`, see [policy.example.json](policy.example.json)): `mode` (`confirm` / `readonly`), `max_order_yuan`, `max_daily_yuan`, `max_weekly_yuan`, `blocked_tools`, `confirm_timeout_sec`.
+Policy (`policy.json`, see [policy.example.json](policy.example.json)): `mode` (`confirm` / `readonly`), `max_order_yuan`, `max_daily_yuan`, `max_weekly_yuan`, `tool_rules`, `blocked_tools`, `confirm_timeout_sec`.
 
 ## Threat model
 

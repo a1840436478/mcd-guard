@@ -28,7 +28,7 @@ AI 客户端（WorkBuddy / Claude Code …）
 | 类别 | 工具 | 护栏怎么处理 |
 | --- | --- | --- |
 | 只读查询（28 个） | `query-nearby-stores`、`query-meals`、`query-meal-detail`、`calculate-price`、`query-store-coupons`、`query-my-coupons`、`query-my-account`、`order-list`、`query-order`、`campaign-calendar`、`list-nutrition-foods`、`now-time-info` 等 | 直接放行，记审计日志 |
-| 写操作（7 个） | `create-order`、`cancel-order`、`party-order-create`、`mall-create-order`、`draw-lottery`、`auto-bind-coupons`、`delivery-create-address` | 只读模式下隐藏并拦截；确认模式下在护栏终端弹出确认卡片，用户输入 `y` 才转发 |
+| 写操作（7 个） | `create-order`、`cancel-order`、`party-order-create`、`mall-create-order`、`draw-lottery`、`auto-bind-coupons`、`delivery-create-address` | 只读模式下隐藏并拦截；确认模式下在护栏终端弹出确认卡片，用户输入 `y` 才转发。用户可在 `tool_rules` 里把单个工具设为直接放行或拦截，下单仍受消费上限约束 |
 | 护栏自用 | `calculate-price` | AI 调 `create-order` 时，护栏先用同样的门店和餐品参数调一次官方试算，取 `data.price`（单位分）作为应付金额，用于确认卡片和消费上限检查 |
 
 只读名单见 [`config.py`](config.py) 的 `READ_ONLY_TOOLS`。**不在名单里的工具（包括官方以后新增的）一律按写操作处理。**
@@ -77,7 +77,7 @@ AI 客户端（WorkBuddy / Claude Code …）
 | stdio 只读模式 | `run_stdio.py` 连官方服务，35 个工具中只暴露 28 个只读工具，标准输出只有 MCP 消息 |
 | 演示模式 | `run_demo.py` 不连官方服务；Claude Code 经护栏查虚构门店和菜单 → 试算 → 下单请求，护栏终端确认后才返回演示订单 |
 
-单元测试（`python -m unittest discover -s tests`）覆盖：握手与 SSE 解析、放行与拦截、确认 / 拒绝 / 超时、单笔与累计上限、试算失败、转发出错、个人信息打码、只读模式下工具列表改写、Host / Origin 校验、网页面板确认码、演示模式、stdio 只读模式。测试使用本地模拟服务，不调用真实 MCP。
+单元测试（`python -m unittest discover -s tests`）覆盖：握手与 SSE 解析、放行与拦截、确认 / 拒绝 / 超时、单笔与累计上限、试算失败、转发出错、个人信息打码、只读模式下工具列表改写、Host / Origin 校验、网页面板确认码、演示模式、stdio 只读模式、逐个工具规则。测试使用本地模拟服务，不调用真实 MCP。
 
 ## 模块
 

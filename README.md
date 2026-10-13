@@ -33,7 +33,7 @@
 | 下单前官方核价 | AI 下单时，护栏先用官方 `calculate-price` 试算，把门店、餐品、应付金额摆在确认卡片上；核不出金额就直接拦截 |
 | 消费上限 | 单笔、当天、本周三档上限，超过直接拦截，连确认都不弹 |
 | 只读模式 | 写操作从工具列表里隐藏；AI 硬调也会被拦截 |
-| 禁用指定工具 | 比如永远不让 AI 抽奖：`"blocked_tools": ["draw-lottery"]` |
+| 逐个设置规则 | 每个操作可设为直接放行、需确认或拦截，比如领券不用每次确认、抽奖永远拦截；下单就算设成直接放行也照样受消费上限约束 |
 | 审计日志 | AI 用你账号做过的每一次调用都记在 `audit/日期.jsonl`，保留 90 天；新增地址时的手机号、姓名、地址自动打码 |
 | Token 只在本机 | AI 客户端只连 `127.0.0.1`，配置里不再需要 Token |
 | 告诉 AI 别绕路 | 被拒绝、超时、超限时，护栏明确告诉 AI 不要重试、不要拆单 |
@@ -144,10 +144,19 @@ claude mcp add --transport http mcd-guard http://127.0.0.1:1024/mcp
 | `max_order_yuan` | `100` | 单笔订单应付上限（元） |
 | `max_daily_yuan` | `200` | 当天已确认订单累计上限（元） |
 | `max_weekly_yuan` | `600` | 本周（周一起）已确认订单累计上限（元） |
-| `blocked_tools` | `[]` | 永远拦截的工具名 |
+| `tool_rules` | `{}` | 逐个工具设置：`allow` 直接放行、`confirm` 需确认、`block` 拦截。没写的写操作按 `confirm`；`party-order-create` 没法核实金额，不能设为 `allow` |
+| `blocked_tools` | `[]` | 永远拦截的工具名，等同于在 `tool_rules` 里设 `block` |
 | `confirm_timeout_sec` | `120` | 等你确认的秒数，超时按拒绝处理 |
 
-改完重启护栏生效。累计金额按审计日志统计：已确认下单、但结果未知或未支付的订单也算进去，宁可多算不少算。
+例如领券不用确认、抽奖永远拦截：
+
+```json
+"tool_rules": {"auto-bind-coupons": "allow", "draw-lottery": "block"}
+```
+
+设成 `allow` 的写操作不会弹确认，但照样记审计日志；护栏启动时会提醒你哪些操作不用确认，网页面板上也能看到每个操作的规则。只读模式下所有写操作一律拦截，不管规则怎么设。
+
+改完重启护栏生效。累计金额按审计日志统计：已确认或按规则放行的下单、但结果未知或未支付的订单也算进去，宁可多算不少算。
 
 ## 审计日志
 
@@ -157,7 +166,7 @@ claude mcp add --transport http mcd-guard http://127.0.0.1:1024/mcp
 {"time": "2026-10-13 17:26:02", "tool": "create-order", "arguments": {"storeCode": "1450713", "orderType": 1, "beType": 1, "items": [{"productCode": "1440", "quantity": 1}]}, "price_fen": 2250, "decision": "rejected"}
 ```
 
-`decision` 可能是：`allowed`（查询放行）、`confirmed`（你确认后执行）、`rejected`（你拒绝）、`timeout`（超时未确认）、`blocked`（被策略拦截）。
+`decision` 可能是：`allowed`（查询放行，或按 `tool_rules` 直接放行）、`confirmed`（你确认后执行）、`rejected`（你拒绝）、`timeout`（超时未确认）、`blocked`（被策略拦截）。
 
 ## 能防什么，不能防什么
 

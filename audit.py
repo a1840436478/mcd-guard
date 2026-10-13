@@ -78,7 +78,7 @@ def read_audit(day, audit_dir=AUDIT_DIR):
 
 def spent_fen(audit_dir=AUDIT_DIR, now=None):
     """
-    统计当天和本周（周一起）已确认并成功创建的订单应付金额。
+    统计当天和本周（周一起）已确认或按规则放行、并成功创建的订单应付金额。
 
     已创建但未支付、以及转发出错结果未知的订单也计入，宁可多算不少算。
 
@@ -93,7 +93,7 @@ def spent_fen(audit_dir=AUDIT_DIR, now=None):
     for offset in range((today - monday).days + 1):
         day = monday + timedelta(days=offset)
         for rec in read_audit(day, audit_dir):
-            if rec.get("tool") == "create-order" and rec.get("decision") == "confirmed" and rec.get("upstream_ok") is not False:
+            if rec.get("tool") == "create-order" and rec.get("decision") in ("confirmed", "allowed") and rec.get("upstream_ok") is not False:
                 amount = rec.get("price_fen") or 0
                 weekly += amount
                 if day == today:

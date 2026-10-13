@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 from config import CLIENT_VERSION
 from confirm import answer_from_web
-from guard import GUARD_TAG, handle_call, is_write_tool, text_result
+from guard import GUARD_TAG, handle_call, is_write_tool, text_result, tool_rule
 from logger import log
 from panel import PANEL_HTML, build_panel_state
 
@@ -34,15 +34,19 @@ def transform_tools(tools, policy):
     result = []
     for tool in tools:
         name = tool["name"]
-        write = is_write_tool(name)
-        if name in policy["blocked_tools"] or (write and policy["mode"] == "readonly"):
+        write, rule = is_write_tool(name), tool_rule(name, policy)
+        if rule == "block" or (write and policy["mode"] == "readonly"):
             continue
         tool = dict(tool)
         annotations = dict(tool.get("annotations") or {})
         annotations["readOnlyHint"] = not write
         if write:
             annotations["destructiveHint"] = True
+        if rule == "confirm":
             tool["description"] = (f"{GUARD_TAG}此操作需要用户在麦麦护栏终端确认后才会执行；被拒绝、超时或超限时不要重试。\n"
+                                   + tool.get("description", ""))
+        elif write:
+            tool["description"] = (f"{GUARD_TAG}此操作会改动用户账户，仍受消费上限约束并记入审计日志；执行前请先和用户说明。\n"
                                    + tool.get("description", ""))
         tool["annotations"] = annotations
         result.append(tool)
