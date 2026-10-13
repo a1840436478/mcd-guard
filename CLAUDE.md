@@ -31,6 +31,14 @@
 | `run_guard.py` | 启动入口 |
 | `probe_mcp.py` | 手动连通性检查，输出 `data/tools.json` |
 
+## 用户授权（2026-10-13）
+
+- 可以用用户的 GitHub 账号新建本比赛的公开仓库 `mcd-guard`，并随时 push。仅限这一个仓库，其他仓库不行。
+- 可以在 `M-China/mcd-developer-innovation-challenge` 提报名 Issue；提交前把标题和正文按官方格式核对一遍。
+- 提交署名：本仓库 git 配置为 `MrMa <1840436478@qq.com>`（只设在本仓库）。
+- 可以把护栏作为 MCP 服务加到本项目范围的 Claude Code 配置里，用于实测和录演示。
+- GitHub CLI 装在 conda 环境里：`/home/claude/miniconda3/envs/mcd-guard/bin/gh`。
+
 ## 合规约束（来自麦当劳 MCP 服务规则）
 
 - 服务只允许个人正常使用，禁止脚本、爬虫、批量、高频、自动化调用；不得公开发布 MCP 返回的底层数据。
