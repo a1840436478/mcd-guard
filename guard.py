@@ -142,7 +142,7 @@ def build_card(name, arguments, policy, quote=None, spent=None):
             lines.append(f"  预约：{arguments['reservationDate']}")
         lines.append("  餐品：")
         lines += [f"    - {line}" for line in describe_items(arguments, quote)]
-        lines.append(f"  应付：{yuan(quote['price'])}（官方试算）")
+        lines.append(f"  应付：{yuan(quote['price'])}（下单前试算）")
         if spent is not None:
             lines.append(f"  今日已确认：{yuan(spent[0])} / 上限 {yuan(round(policy['max_daily_yuan'] * 100))}")
     else:

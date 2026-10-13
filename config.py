@@ -27,6 +27,7 @@ GUARD_PORT = 1024  # 本地端口，致敬 1024 程序员节
 POLICY_FILE = PROJECT_DIR / "policy.json"  # 用户自己的策略文件（不提交），不存在时用默认策略
 AUDIT_DIR = PROJECT_DIR / "audit"  # 审计日志，每天一个 jsonl 文件
 AUDIT_KEEP_DAYS = 90  # 审计日志保留天数，超过的自动删除
+DEMO_AUDIT_DIR = PROJECT_DIR / "audit-demo"  # 演示模式的审计日志，和真实账户的分开，同样保留 90 天
 
 # 只读工具：直接放行。不在这个名单里的工具（包括官方以后新增的）一律按写操作处理
 READ_ONLY_TOOLS = frozenset({

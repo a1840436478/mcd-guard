@@ -5,6 +5,7 @@ __pycache__/
 output/
 test_tmp_*/
 audit/
+audit-demo/
 policy.json
 
 # 开发辅助文件，只留本地

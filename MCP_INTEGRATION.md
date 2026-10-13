@@ -74,14 +74,16 @@ AI 客户端（WorkBuddy / Claude Code …）
 | 确认环节拒绝 | 输入 `n` 后返回“用户拒绝”，护栏日志中没有任何转发 `create-order` 的记录 |
 | 真实 AI 客户端 | Claude Code 2.1.296 经护栏完成查店 → 菜单 → 试算 → 下单请求；被拒绝后没有重试，并询问用户下一步 |
 | 超限拦截 | Claude Code 为 12 人下单，官方试算应付 ¥270.00，超过单笔上限 ¥100，护栏直接拦截，不弹确认 |
+| 演示模式 | `run_demo.py` 不连官方服务；Claude Code 经护栏查虚构门店和菜单 → 试算 → 下单请求，护栏终端确认后才返回演示订单 |
 
-单元测试（`python -m unittest discover -s tests`）覆盖：握手与 SSE 解析、放行与拦截、确认 / 拒绝 / 超时、单笔与累计上限、试算失败、转发出错、个人信息打码、只读模式下工具列表改写、Origin 校验。测试使用本地模拟服务，不调用真实 MCP。
+单元测试（`python -m unittest discover -s tests`）覆盖：握手与 SSE 解析、放行与拦截、确认 / 拒绝 / 超时、单笔与累计上限、试算失败、转发出错、个人信息打码、只读模式下工具列表改写、Host / Origin 校验、网页面板确认码、演示模式。测试使用本地模拟服务，不调用真实 MCP。
 
 ## 模块
 
 | 文件 | 用途 |
 | --- | --- |
 | `run_guard.py` | 启动入口 |
+| `run_demo.py` / `demo_upstream.py` | 演示模式入口与虚构数据的模拟服务，不需要 Token |
 | `server.py` | 本地 MCP 服务（Streamable HTTP，只返回 JSON）与网页面板，改写工具列表、校验 Host 和 Origin |
 | `guard.py` | 核心判断：放行 / 拦截 / 本机确认，下单前核价并检查上限 |
 | `confirm.py` | 写操作确认：护栏终端输入 y/n，或网页面板输入只显示在终端的确认码 |

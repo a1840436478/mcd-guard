@@ -13,6 +13,7 @@
 ## 运行
 
 - 单元测试：`python -m unittest discover -s tests`（不需要 Token，用假依赖和本地服务；临时文件放在项目下 `test_tmp_*`，跑完自动删除）
+- 演示模式：运行 `run_demo.py`，不需要 Token，可用真实 AI 客户端随意测试写操作
 - 启动护栏：运行 `run_guard.py`，默认监听 `http://127.0.0.1:1024/mcp`，写操作在这个终端里确认
 
 ## 模块
@@ -30,6 +31,7 @@
 | `panel.py` | 本地网页面板页面与数据 |
 | `server.py` | 本地 MCP 服务（只返回 JSON）与网页面板路由，改写工具列表、校验 Host 和 Origin |
 | `run_guard.py` | 启动入口 |
+| `run_demo.py` / `demo_upstream.py` | 演示模式：虚构门店和餐品的模拟服务，不连官方、不需要 Token，审计写到 `audit-demo/` |
 | `probe_mcp.py` | 手动连通性检查，输出 `data/tools.json` |
 
 只提交和参赛作品相关的文件。开发辅助文件（`probe_mcp.py`、`tools/`、`data/`）只留本地，已写进 `.gitignore`。

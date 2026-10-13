@@ -4,8 +4,9 @@ import threading
 from datetime import date
 
 from audit import cleanup_old_audit, read_audit, spent_fen, write_audit
-from config import GUARD_HOST, GUARD_PORT, MCP_TOKEN_ENV, MCP_URL, POLICY_FILE
+from config import AUDIT_DIR, DEMO_AUDIT_DIR, GUARD_HOST, GUARD_PORT, MCP_TOKEN_ENV, MCP_URL, POLICY_FILE
 from confirm import confirm, start_reader
+from demo_upstream import DEMO_TOOLS, demo_call
 from logger import log
 from mcp_client import call_tool_raw, close_session, list_tools, open_session
 from policy import load_policy
@@ -42,39 +43,44 @@ def calc_props_of(tools):
     raise RuntimeError(f"上游工具列表里没有 calculate-price，无法核实订单金额: 工具数={len(tools)}")
 
 
-def main(host, port, policy_path, upstream_url):
+def build_state(tools, policy, upstream, audit_dir):
     """
-    启动护栏，直到 Ctrl+C。
+    组装本地服务需要的状态。
+
+    :param tools: 上游工具列表
+    :param policy: 策略 dict
+    :param upstream: 上游调用函数 fn(name, arguments)
+    :param audit_dir: 审计日志目录
+    :return: state dict
+    """
+    return {
+        "tools": tools,
+        "policy": policy,
+        "ctx": {
+            "policy": policy,
+            "upstream": upstream,
+            "confirm": confirm,
+            "spent": lambda: spent_fen(audit_dir),
+            "audit": lambda record: write_audit(record, audit_dir),
+            "calc_props": calc_props_of(tools),
+        },
+        "recent": lambda: read_audit(date.today(), audit_dir)[-50:],
+    }
+
+
+def serve(host, port, state):
+    """
+    启动本地服务，直到 Ctrl+C。
 
     :param host: 本地监听地址
     :param port: 本地端口
-    :param policy_path: 策略文件路径
-    :param upstream_url: 官方 MCP 地址
+    :param state: build_state 的结果
     :return: None
     """
-    token = get_secret(MCP_TOKEN_ENV)
-    policy = load_policy(policy_path)
-    cleanup_old_audit()
-    log(f"连接官方 MCP: 地址={upstream_url}, Token={mask(token)}")
-    session = open_session(upstream_url, token)
-    server = None
+    policy = state["policy"]
+    start_reader()
+    server = create_server(host, port, state)
     try:
-        tools = list_tools(session)
-        state = {
-            "tools": tools,
-            "policy": policy,
-            "ctx": {
-                "policy": policy,
-                "upstream": build_upstream(session),
-                "confirm": confirm,
-                "spent": spent_fen,
-                "audit": write_audit,
-                "calc_props": calc_props_of(tools),
-            },
-            "recent": lambda: read_audit(date.today())[-50:],
-        }
-        start_reader()
-        server = create_server(host, port, state)
         log(f"麦麦护栏已启动: 地址=http://{host}:{port}/mcp, 模式={policy['mode']}, "
             f"单笔上限={policy['max_order_yuan']}元, 当天上限={policy['max_daily_yuan']}元")
         log("在 AI 客户端里把麦当劳 MCP 的地址换成上面的地址，不需要再填 Token。写操作会在这个窗口里请你确认。")
@@ -83,8 +89,34 @@ def main(host, port, policy_path, upstream_url):
     except KeyboardInterrupt:
         log("收到 Ctrl+C，护栏退出")
     finally:
-        if server is not None:
-            server.server_close()
+        server.server_close()
+
+
+def main(host, port, policy_path, upstream_url, demo):
+    """
+    启动护栏，直到 Ctrl+C。
+
+    :param host: 本地监听地址
+    :param port: 本地端口
+    :param policy_path: 策略文件路径
+    :param upstream_url: 官方 MCP 地址
+    :param demo: True 时用虚构数据的模拟服务，不连官方、不需要 Token
+    :return: None
+    """
+    policy = load_policy(policy_path)
+    if demo:
+        cleanup_old_audit(DEMO_AUDIT_DIR)
+        log(f"演示模式: 不连麦当劳官方 MCP，门店和餐品都是虚构数据，审计日志写到 {DEMO_AUDIT_DIR}", "WARNING")
+        serve(host, port, build_state(DEMO_TOOLS, policy, demo_call, DEMO_AUDIT_DIR))
+        return
+    token = get_secret(MCP_TOKEN_ENV)
+    cleanup_old_audit(AUDIT_DIR)
+    log(f"连接官方 MCP: 地址={upstream_url}, Token={mask(token)}")
+    session = open_session(upstream_url, token)
+    try:
+        tools = list_tools(session)
+        serve(host, port, build_state(tools, policy, build_upstream(session), AUDIT_DIR))
+    finally:
         close_session(session)
 
 
@@ -93,4 +125,5 @@ if __name__ == "__main__":
     PORT = GUARD_PORT  # 本地端口
     POLICY_PATH = POLICY_FILE  # 策略文件，不存在时用默认策略
     UPSTREAM_URL = MCP_URL  # 官方 MCP 地址
-    main(HOST, PORT, POLICY_PATH, UPSTREAM_URL)
+    DEMO = False  # 演示模式开关；想先体验可以直接运行 run_demo.py
+    main(HOST, PORT, POLICY_PATH, UPSTREAM_URL, DEMO)
