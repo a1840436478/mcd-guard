@@ -89,5 +89,3 @@ AI 客户端（WorkBuddy / Claude Code …）
 | `audit.py` | 审计日志与累计消费统计 |
 | `mcp_client.py` | 连接官方 MCP 的客户端 |
 | `config.py` / `logger.py` / `utils.py` | 配置、日志、通用工具 |
-| `probe_mcp.py` | 手动连通性检查 |
-| `tools/make_demo_svg.py` | 生成 README 演示图 |

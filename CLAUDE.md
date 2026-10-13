@@ -31,6 +31,8 @@
 | `run_guard.py` | 启动入口 |
 | `probe_mcp.py` | 手动连通性检查，输出 `data/tools.json` |
 
+只提交和参赛作品相关的文件。开发辅助文件（`probe_mcp.py`、`tools/`、`data/`）只留本地，已写进 `.gitignore`。
+
 ## 用户授权（2026-10-13）
 
 - 可以用用户的 GitHub 账号新建本比赛的公开仓库 `mcd-guard`，并随时 push。仅限这一个仓库，其他仓库不行。

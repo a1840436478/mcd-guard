@@ -6,3 +6,8 @@ output/
 test_tmp_*/
 audit/
 policy.json
+
+# 开发辅助文件，只留本地
+tools/
+probe_mcp.py
+data/
