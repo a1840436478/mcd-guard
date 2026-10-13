@@ -7,8 +7,8 @@ import json
 import time
 from datetime import datetime, timedelta
 
-from config import AUDIT_DIR, AUDIT_KEEP_DAYS
-from logger import log
+from mcd_guard.config import AUDIT_DIR, AUDIT_KEEP_DAYS
+from mcd_guard.logger import log
 
 # 写进审计日志前要打码的字段（新增地址里的个人信息）
 SENSITIVE_KEYS = {"phone", "contactName", "address", "addressDetail"}

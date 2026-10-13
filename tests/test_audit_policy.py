@@ -10,9 +10,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from audit import cleanup_old_audit, read_audit, spent_fen, write_audit  # noqa: E402
-from config import AUDIT_KEEP_DAYS, DEFAULT_POLICY  # noqa: E402
-from policy import load_policy  # noqa: E402
+from mcd_guard.audit import cleanup_old_audit, read_audit, spent_fen, write_audit  # noqa: E402
+from mcd_guard.config import AUDIT_KEEP_DAYS, DEFAULT_POLICY  # noqa: E402
+from mcd_guard.policy import load_policy  # noqa: E402
 from tmp_root import temp_dir  # noqa: E402
 
 

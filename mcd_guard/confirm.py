@@ -10,7 +10,7 @@ import sys
 import threading
 import time
 
-from logger import log
+from mcd_guard.logger import log
 
 MAX_WRONG_CODES = 5  # 网页确认码连续输错次数上限，超过就按拒绝处理
 

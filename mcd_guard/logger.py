@@ -5,7 +5,7 @@ import sys
 import time
 from datetime import date
 
-from config import LOG_DIR, LOG_KEEP_DAYS
+from mcd_guard.config import LOG_DIR, LOG_KEEP_DAYS
 
 _state = {"date": None, "logger": None, "stream": sys.stdout}
 

@@ -7,11 +7,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config import DEFAULT_POLICY  # noqa: E402
-from demo_upstream import DEMO_TOOLS, demo_call  # noqa: E402
-from guard import handle_call  # noqa: E402
-from mcp_client import parse_tool_result  # noqa: E402
-from run_guard import build_state, calc_props_of  # noqa: E402
+from mcd_guard.config import DEFAULT_POLICY  # noqa: E402
+from mcd_guard.demo_upstream import DEMO_TOOLS, demo_call  # noqa: E402
+from mcd_guard.guard import handle_call  # noqa: E402
+from mcd_guard.mcp_client import parse_tool_result  # noqa: E402
+from mcd_guard.app import build_state, calc_props_of  # noqa: E402
 from tmp_root import temp_dir  # noqa: E402
 
 ORDER = {"storeCode": "DEMO001", "orderType": 1, "beType": 1, "items": [{"productCode": "D01", "quantity": 2}]}

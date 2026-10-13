@@ -2,8 +2,8 @@
 
 import os
 
-from config import ENV_FILE
-from logger import log
+from mcd_guard.config import ENV_FILE
+from mcd_guard.logger import log
 
 
 def read_env_file(path=ENV_FILE):

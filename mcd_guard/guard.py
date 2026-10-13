@@ -13,10 +13,10 @@ handle_call 的依赖都通过 ctx 传入，便于测试：
 
 import json
 
-from audit import redact
-from config import READ_ONLY_TOOLS, WRITE_TOOL_NAMES
-from logger import log
-from mcp_client import parse_tool_result
+from mcd_guard.audit import redact
+from mcd_guard.config import READ_ONLY_TOOLS, WRITE_TOOL_NAMES
+from mcd_guard.logger import log
+from mcd_guard.mcp_client import parse_tool_result
 
 BE_TYPE_NAMES = {1: "到店自取", 2: "麦乐送", 5: "得来速", 6: "企业团餐"}
 GUARD_TAG = "【麦麦护栏】"

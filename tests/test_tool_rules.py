@@ -7,11 +7,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from audit import spent_fen, write_audit  # noqa: E402
-from config import DEFAULT_POLICY  # noqa: E402
-from guard import auto_allowed_writes, handle_call, tool_rule  # noqa: E402
-from policy import validate_policy  # noqa: E402
-from server import transform_tools  # noqa: E402
+from mcd_guard.audit import spent_fen, write_audit  # noqa: E402
+from mcd_guard.config import DEFAULT_POLICY  # noqa: E402
+from mcd_guard.guard import auto_allowed_writes, handle_call, tool_rule  # noqa: E402
+from mcd_guard.policy import validate_policy  # noqa: E402
+from mcd_guard.server import transform_tools  # noqa: E402
 from test_guard import ORDER, FakeEnv  # noqa: E402
 from tmp_root import temp_dir  # noqa: E402
 

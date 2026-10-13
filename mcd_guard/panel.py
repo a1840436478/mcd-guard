@@ -1,8 +1,8 @@
 """本地网页面板：查看待确认请求、今日消费和审计记录，并用确认码确认写操作。"""
 
-from config import WRITE_TOOL_NAMES
-from confirm import get_pending
-from guard import is_write_tool, tool_label, tool_rule
+from mcd_guard.config import WRITE_TOOL_NAMES
+from mcd_guard.confirm import get_pending
+from mcd_guard.guard import is_write_tool, tool_label, tool_rule
 
 PANEL_HTML = r"""<!doctype html>
 <html lang="zh-CN">

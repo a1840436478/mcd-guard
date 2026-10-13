@@ -7,8 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config import DEFAULT_POLICY  # noqa: E402
-from guard import check_limits, handle_call, is_write_tool  # noqa: E402
+from mcd_guard.config import DEFAULT_POLICY  # noqa: E402
+from mcd_guard.guard import check_limits, handle_call, is_write_tool  # noqa: E402
 
 
 def ok_result(data):

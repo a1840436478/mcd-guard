@@ -1,99 +1,13 @@
 """启动麦麦护栏：连接官方 MCP，在本机开一个 MCP 服务给 AI 客户端用。"""
 
-import threading
-from datetime import date
-
-from audit import cleanup_old_audit, read_audit, spent_fen, write_audit
-from config import AUDIT_DIR, DEMO_AUDIT_DIR, GUARD_HOST, GUARD_PORT, MCP_TOKEN_ENV, MCP_URL, POLICY_FILE
-from confirm import confirm, start_reader
-from demo_upstream import DEMO_TOOLS, demo_call
-from guard import auto_allowed_writes
-from logger import log
-from mcp_client import call_tool_raw, close_session, list_tools, open_session
-from policy import load_policy
-from server import create_server
-from utils import get_secret, mask
-
-
-def build_upstream(session):
-    """
-    生成串行调用上游的函数（同一时间只发一个请求，符合个人正常使用的频率）。
-
-    :param session: 上游会话 dict
-    :return: fn(name, arguments) -> 上游原始 result
-    """
-    lock = threading.Lock()
-
-    def upstream(name, arguments):
-        with lock:
-            return call_tool_raw(session, name, arguments)
-
-    return upstream
-
-
-def calc_props_of(tools):
-    """
-    取出 calculate-price 支持的参数名。
-
-    :param tools: 上游工具列表
-    :return: set[str]
-    """
-    for tool in tools:
-        if tool["name"] == "calculate-price":
-            return set(tool.get("inputSchema", {}).get("properties", {}))
-    raise RuntimeError(f"上游工具列表里没有 calculate-price，无法核实订单金额: 工具数={len(tools)}")
-
-
-def build_state(tools, policy, upstream, audit_dir):
-    """
-    组装本地服务需要的状态。
-
-    :param tools: 上游工具列表
-    :param policy: 策略 dict
-    :param upstream: 上游调用函数 fn(name, arguments)
-    :param audit_dir: 审计日志目录
-    :return: state dict
-    """
-    return {
-        "tools": tools,
-        "policy": policy,
-        "ctx": {
-            "policy": policy,
-            "upstream": upstream,
-            "confirm": confirm,
-            "spent": lambda: spent_fen(audit_dir),
-            "audit": lambda record: write_audit(record, audit_dir),
-            "calc_props": calc_props_of(tools),
-        },
-        "recent": lambda: read_audit(date.today(), audit_dir)[-50:],
-    }
-
-
-def serve(host, port, state):
-    """
-    启动本地服务，直到 Ctrl+C。
-
-    :param host: 本地监听地址
-    :param port: 本地端口
-    :param state: build_state 的结果
-    :return: None
-    """
-    policy = state["policy"]
-    allowed = auto_allowed_writes(policy)
-    if allowed and policy["mode"] == "confirm":
-        log(f"注意：以下写操作按你的 tool_rules 不需要确认就会执行（下单仍受消费上限约束）: {', '.join(allowed)}", "WARNING")
-    start_reader()
-    server = create_server(host, port, state)
-    try:
-        log(f"麦麦护栏已启动: 地址=http://{host}:{port}/mcp, 模式={policy['mode']}, "
-            f"单笔上限={policy['max_order_yuan']}元, 当天上限={policy['max_daily_yuan']}元")
-        log("在 AI 客户端里把麦当劳 MCP 的地址换成上面的地址，不需要再填 Token。写操作会在这个窗口里请你确认。")
-        log(f"网页面板: http://{host}:{port}/ （确认时需要输入只显示在这个窗口里的确认码）")
-        server.serve_forever()
-    except KeyboardInterrupt:
-        log("收到 Ctrl+C，护栏退出")
-    finally:
-        server.server_close()
+from mcd_guard.app import build_state, build_upstream, serve
+from mcd_guard.audit import cleanup_old_audit
+from mcd_guard.config import AUDIT_DIR, DEMO_AUDIT_DIR, GUARD_HOST, GUARD_PORT, MCP_TOKEN_ENV, MCP_URL, POLICY_FILE
+from mcd_guard.demo_upstream import DEMO_TOOLS, demo_call
+from mcd_guard.logger import log
+from mcd_guard.mcp_client import close_session, list_tools, open_session
+from mcd_guard.policy import load_policy
+from mcd_guard.utils import get_secret, mask
 
 
 def main(host, port, policy_path, upstream_url, demo):

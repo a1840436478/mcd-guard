@@ -8,10 +8,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config import DEFAULT_POLICY  # noqa: E402
-from demo_upstream import DEMO_TOOLS, demo_call  # noqa: E402
-from run_stdio import readonly_state  # noqa: E402
-from stdio_server import serve_stdio  # noqa: E402
+from mcd_guard.config import DEFAULT_POLICY  # noqa: E402
+from mcd_guard.demo_upstream import DEMO_TOOLS, demo_call  # noqa: E402
+from mcd_guard.app import readonly_state  # noqa: E402
+from mcd_guard.stdio_server import serve_stdio  # noqa: E402
 from tmp_root import temp_dir  # noqa: E402
 
 

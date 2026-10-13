@@ -5,8 +5,8 @@ stdio 模式下护栏没有自己的终端窗口，确认卡片和确认码都�
 
 import json
 
-from logger import log
-from server import rpc_error, handle_rpc
+from mcd_guard.logger import log
+from mcd_guard.server import rpc_error, handle_rpc
 
 
 def handle_line(line, state):

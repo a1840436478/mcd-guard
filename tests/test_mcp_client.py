@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from mcp_client import call_tool, close_session, list_tools, open_session, parse_sse  # noqa: E402
+from mcd_guard.mcp_client import call_tool, close_session, list_tools, open_session, parse_sse  # noqa: E402
 
 TOKEN = "test-token-123456"
 SESSION_ID = "sess-abc"
@@ -114,7 +114,7 @@ class McpClientTest(unittest.TestCase):
         try:
             with self.assertRaisesRegex(RuntimeError, "工具调用失败"):
                 call_tool(session, "bad")
-            from mcp_client import _request
+            from mcd_guard.mcp_client import _request
             with self.assertRaisesRegex(RuntimeError, "MCP 返回错误"):
                 _request(session, "unknown/method")
         finally:

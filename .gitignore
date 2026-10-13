@@ -9,6 +9,7 @@ audit-demo/
 policy.json
 
 # 开发辅助文件，只留本地
+CLAUDE.md
 tools/
 probe_mcp.py
 data/

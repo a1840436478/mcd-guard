@@ -1,6 +1,6 @@
 """演示模式入口：不需要麦当劳 Token，用虚构门店和餐品体验护栏的确认、限额和网页面板。"""
 
-from config import GUARD_HOST, GUARD_PORT, POLICY_FILE, MCP_URL
+from mcd_guard.config import GUARD_HOST, GUARD_PORT, POLICY_FILE, MCP_URL
 from run_guard import main
 
 if __name__ == "__main__":

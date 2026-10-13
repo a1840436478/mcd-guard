@@ -2,8 +2,8 @@
 
 import json
 
-from config import DEFAULT_POLICY, NO_AUTO_ALLOW_TOOLS, TOOL_RULES
-from logger import log
+from mcd_guard.config import DEFAULT_POLICY, NO_AUTO_ALLOW_TOOLS, TOOL_RULES
+from mcd_guard.logger import log
 
 
 def validate_policy(policy):

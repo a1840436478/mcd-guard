@@ -3,7 +3,7 @@
 from pathlib import Path
 
 # 目录
-PROJECT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = PROJECT_DIR / ".env"  # 本地密钥文件，不提交
 DATA_DIR = PROJECT_DIR / "data"  # 可提交的公开数据（工具 schema、录制的菜单快照等）
 LOG_DIR = PROJECT_DIR / "logs"  # 按日期命名的日志

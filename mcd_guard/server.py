@@ -9,11 +9,11 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
-from config import CLIENT_VERSION
-from confirm import answer_from_web
-from guard import GUARD_TAG, handle_call, is_write_tool, text_result, tool_rule
-from logger import log
-from panel import PANEL_HTML, build_panel_state
+from mcd_guard.config import CLIENT_VERSION
+from mcd_guard.confirm import answer_from_web
+from mcd_guard.guard import GUARD_TAG, handle_call, is_write_tool, text_result, tool_rule
+from mcd_guard.logger import log
+from mcd_guard.panel import PANEL_HTML, build_panel_state
 
 SUPPORTED_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 LOCAL_HOSTS = ("localhost", "127.0.0.1", "::1")

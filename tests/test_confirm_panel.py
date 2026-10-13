@@ -11,8 +11,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import confirm  # noqa: E402
-from server import create_server, is_local_host  # noqa: E402
+from mcd_guard import confirm  # noqa: E402
+from mcd_guard.server import create_server, is_local_host  # noqa: E402
 from test_guard import FakeEnv  # noqa: E402
 
 

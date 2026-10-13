@@ -10,9 +10,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config import DEFAULT_POLICY  # noqa: E402
-from mcp_client import call_tool_raw, close_session, list_tools, open_session  # noqa: E402
-from server import create_server, is_local_origin  # noqa: E402
+from mcd_guard.config import DEFAULT_POLICY  # noqa: E402
+from mcd_guard.mcp_client import call_tool_raw, close_session, list_tools, open_session  # noqa: E402
+from mcd_guard.server import create_server, is_local_origin  # noqa: E402
 from test_guard import FakeEnv  # noqa: E402
 
 UPSTREAM_TOOLS = [

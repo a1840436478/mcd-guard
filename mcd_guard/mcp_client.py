@@ -10,7 +10,7 @@ import time
 import urllib.error
 import urllib.request
 
-from config import (
+from mcd_guard.config import (
     CLIENT_NAME,
     CLIENT_VERSION,
     MCP_PROTOCOL_VERSION,
@@ -18,7 +18,7 @@ from config import (
     MCP_RETRY_WAIT,
     MCP_TIMEOUT,
 )
-from logger import log
+from mcd_guard.logger import log
 
 _id_lock = threading.Lock()
 

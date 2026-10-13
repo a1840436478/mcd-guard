@@ -7,7 +7,7 @@
 | 服务地址 | `https://mcp.mcd.cn` |
 | 传输协议 | Streamable HTTP，协议版本 `2025-06-18` |
 | 鉴权 | `Authorization: Bearer ${MCD_MCP_TOKEN}`，Token 只由护栏从本机 `.env` 或环境变量读取 |
-| 上游客户端 | [`mcp_client.py`](mcp_client.py)，只用 Python 标准库：`initialize` → `notifications/initialized` → `tools/list` / `tools/call`，兼容 JSON 与 SSE 响应 |
+| 上游客户端 | [`mcp_client.py`](mcd_guard/mcp_client.py)，只用 Python 标准库：`initialize` → `notifications/initialized` → `tools/list` / `tools/call`，兼容 JSON 与 SSE 响应 |
 
 麦麦护栏同时是一个 MCP Server（给 AI 客户端连）和一个 MCP Client（连麦当劳官方）：
 
@@ -31,11 +31,11 @@ AI 客户端（WorkBuddy / Claude Code …）
 | 写操作（7 个） | `create-order`、`cancel-order`、`party-order-create`、`mall-create-order`、`draw-lottery`、`auto-bind-coupons`、`delivery-create-address` | 只读模式下隐藏并拦截；确认模式下在护栏终端弹出确认卡片，用户输入 `y` 才转发。用户可在 `tool_rules` 里把单个工具设为直接放行或拦截，下单仍受消费上限约束 |
 | 护栏自用 | `calculate-price` | AI 调 `create-order` 时，护栏先用同样的门店和餐品参数调一次官方试算，取 `data.price`（单位分）作为应付金额，用于确认卡片和消费上限检查 |
 
-只读名单见 [`config.py`](config.py) 的 `READ_ONLY_TOOLS`。**不在名单里的工具（包括官方以后新增的）一律按写操作处理。**
+只读名单见 [`config.py`](mcd_guard/config.py) 的 `READ_ONLY_TOOLS`。**不在名单里的工具（包括官方以后新增的）一律按写操作处理。**
 
 ## 调用流程
 
-一次 `tools/call` 在护栏里的处理顺序（[`guard.py`](guard.py) 的 `handle_call`）：
+一次 `tools/call` 在护栏里的处理顺序（[`guard.py`](mcd_guard/guard.py) 的 `handle_call`）：
 
 1. 工具在 `blocked_tools` 里：拦截。
 2. 只读工具：转发给官方，原样返回结果。
@@ -81,16 +81,21 @@ AI 客户端（WorkBuddy / Claude Code …）
 
 ## 模块
 
+根目录只放三个入口，核心代码在 `mcd_guard/`：
+
 | 文件 | 用途 |
 | --- | --- |
-| `run_guard.py` | 启动入口 |
-| `run_demo.py` / `demo_upstream.py` | 演示模式入口与虚构数据的模拟服务，不需要 Token |
-| `run_stdio.py` / `stdio_server.py` | stdio 只读模式：给只支持 stdio 的客户端，写操作隐藏并拦截 |
-| `server.py` | 本地 MCP 服务（Streamable HTTP，只返回 JSON）与网页面板，改写工具列表、校验 Host 和 Origin |
-| `guard.py` | 核心判断：放行 / 拦截 / 本机确认，下单前核价并检查上限 |
-| `confirm.py` | 写操作确认：护栏终端输入 y/n，或网页面板输入只显示在终端的确认码 |
-| `panel.py` | 本地网页面板 |
-| `policy.py` | 读取并校验 `policy.json` |
-| `audit.py` | 审计日志与累计消费统计 |
-| `mcp_client.py` | 连接官方 MCP 的客户端 |
-| `config.py` / `logger.py` / `utils.py` | 配置、日志、通用工具 |
+| `run_guard.py` | 正式启动：连接官方 MCP，写操作在终端或网页面板确认 |
+| `run_demo.py` | 演示模式：虚构数据，不需要 Token |
+| `run_stdio.py` | stdio 只读模式：给只支持 stdio 的客户端，写操作隐藏并拦截 |
+| `mcd_guard/app.py` | 组装上游调用、服务状态并启动服务 |
+| `mcd_guard/server.py` | 本地 MCP 服务（Streamable HTTP，只返回 JSON）与网页面板，改写工具列表、校验 Host 和 Origin |
+| `mcd_guard/stdio_server.py` | stdio 传输 |
+| `mcd_guard/guard.py` | 核心判断：放行 / 拦截 / 本机确认，下单前核价并检查上限，逐个工具规则 |
+| `mcd_guard/confirm.py` | 写操作确认：护栏终端输入 y/n，或网页面板输入只显示在终端的确认码 |
+| `mcd_guard/panel.py` | 本地网页面板 |
+| `mcd_guard/policy.py` | 读取并校验 `policy.json` |
+| `mcd_guard/audit.py` | 审计日志与累计消费统计 |
+| `mcd_guard/mcp_client.py` | 连接官方 MCP 的客户端 |
+| `mcd_guard/demo_upstream.py` | 演示模式用的虚构数据模拟服务 |
+| `mcd_guard/config.py` / `logger.py` / `utils.py` | 配置、日志、通用工具 |

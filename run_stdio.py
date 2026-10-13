@@ -6,32 +6,15 @@ stdio 模式下护栏没有自己的终端窗口，写操作没法让用户确�
 
 import sys
 
-from audit import cleanup_old_audit
-from config import AUDIT_DIR, DEMO_AUDIT_DIR, MCP_TOKEN_ENV, MCP_URL, POLICY_FILE
-from demo_upstream import DEMO_TOOLS, demo_call
-from logger import log, use_stderr
-from mcp_client import close_session, list_tools, open_session
-from policy import load_policy
-from run_guard import build_state, build_upstream
-from stdio_server import serve_stdio
-from utils import get_secret, mask
-
-
-def readonly_state(tools, policy, upstream, audit_dir):
-    """
-    组装只读模式的服务状态，确认环节一律按拒绝处理（只读模式下本来也走不到确认）。
-
-    :param tools: 上游工具列表
-    :param policy: 用户策略 dict
-    :param upstream: 上游调用函数
-    :param audit_dir: 审计日志目录
-    :return: state dict
-    """
-    if policy["mode"] != "readonly":
-        log(f"stdio 模式无法确认写操作，策略模式由 {policy['mode']} 改为 readonly", "WARNING")
-    state = build_state(tools, {**policy, "mode": "readonly"}, upstream, audit_dir)
-    state["ctx"]["confirm"] = lambda card, timeout: "no"
-    return state
+from mcd_guard.app import build_upstream, readonly_state
+from mcd_guard.audit import cleanup_old_audit
+from mcd_guard.config import AUDIT_DIR, DEMO_AUDIT_DIR, MCP_TOKEN_ENV, MCP_URL, POLICY_FILE
+from mcd_guard.demo_upstream import DEMO_TOOLS, demo_call
+from mcd_guard.logger import log, use_stderr
+from mcd_guard.mcp_client import close_session, list_tools, open_session
+from mcd_guard.policy import load_policy
+from mcd_guard.stdio_server import serve_stdio
+from mcd_guard.utils import get_secret, mask
 
 
 def main(policy_path, upstream_url, demo):
