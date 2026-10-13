@@ -1,0 +1,8 @@
+{
+  "mode": "confirm",
+  "max_order_yuan": 100,
+  "max_daily_yuan": 200,
+  "max_weekly_yuan": 600,
+  "blocked_tools": ["draw-lottery"],
+  "confirm_timeout_sec": 120
+}

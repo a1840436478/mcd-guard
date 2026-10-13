@@ -1,11 +1,8 @@
 {
   "mcpServers": {
-    "mcd-mcp": {
+    "mcd-guard": {
       "type": "streamablehttp",
-      "url": "https://mcp.mcd.cn",
-      "headers": {
-        "Authorization": "Bearer ${MCD_MCP_TOKEN}"
-      }
+      "url": "http://127.0.0.1:1024/mcp"
     }
   }
 }
