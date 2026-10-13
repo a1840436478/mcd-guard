@@ -12,16 +12,23 @@
 
 ## 运行
 
-- 单元测试：`python -m unittest discover -s tests`（不需要 Token，用本地模拟的 MCP 服务）
+- 单元测试：`python -m unittest discover -s tests`（不需要 Token，用假依赖和本地服务；临时文件放在项目下 `test_tmp_*`，跑完自动删除）
+- 启动护栏：运行 `run_guard.py`，默认监听 `http://127.0.0.1:1024/mcp`，写操作在这个终端里确认
 
 ## 模块
 
 | 文件 | 用途 |
 |---|---|
-| `config.py` | 共用固定配置 |
+| `config.py` | 共用固定配置：端口、只读工具名单、写操作中文名、默认策略 |
 | `logger.py` | `log()`，控制台 + `logs/日期.log`，保留 14 天 |
 | `utils.py` | `.env` 读取、密钥打码 |
 | `mcp_client.py` | 上游 MCP Streamable HTTP 客户端（会话用 dict 表示） |
+| `policy.py` | 读取 `policy.json`（不提交）并与默认策略合并、校验 |
+| `audit.py` | 审计日志 `audit/日期.jsonl`（保留 90 天），统计当天/本周已确认消费 |
+| `guard.py` | 核心判断：放行 / 拦截 / 本机确认；下单前用 calculate-price 核价并检查限额 |
+| `console_confirm.py` | 在护栏终端显示确认卡片并读取用户输入 |
+| `server.py` | 本地 MCP 服务（只返回 JSON），改写工具列表、校验 Origin |
+| `run_guard.py` | 启动入口 |
 | `probe_mcp.py` | 手动连通性检查，输出 `data/tools.json` |
 
 ## 合规约束（来自麦当劳 MCP 服务规则）

@@ -3,3 +3,6 @@ logs/
 __pycache__/
 .env
 output/
+test_tmp_*/
+audit/
+policy.json

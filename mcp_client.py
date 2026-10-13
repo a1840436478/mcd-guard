@@ -5,6 +5,7 @@
 """
 
 import json
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -18,6 +19,8 @@ from config import (
     MCP_TIMEOUT,
 )
 from logger import log
+
+_id_lock = threading.Lock()
 
 
 def _build_headers(session):
@@ -88,8 +91,9 @@ def _request(session, method, params=None):
     :param params: 参数 dict
     :return: JSON-RPC result 字段
     """
-    req_id = session["next_id"]
-    session["next_id"] += 1
+    with _id_lock:
+        req_id = session["next_id"]
+        session["next_id"] += 1
     payload = {"jsonrpc": "2.0", "id": req_id, "method": method, "params": params or {}}
     _, headers, text = _post(session, payload)
     if headers.get("Mcp-Session-Id"):
@@ -165,29 +169,50 @@ def list_tools(session):
     return tools
 
 
-def call_tool(session, name, arguments=None):
+def call_tool_raw(session, name, arguments=None):
     """
-    调用一个工具，返回解析后的业务数据。
+    调用一个工具，原样返回 MCP 的 result（含 content / structuredContent / isError）。
+
+    :param session: 会话 dict
+    :param name: 工具名
+    :param arguments: 工具参数 dict
+    :return: result dict
+    """
+    start = time.time()
+    result = _request(session, "tools/call", {"name": name, "arguments": arguments or {}})
+    log(f"调用工具: 工具={name}, 耗时秒={time.time() - start:.2f}, 出错={bool(result.get('isError'))}")
+    return result
+
+
+def parse_tool_result(result):
+    """
+    从 tools/call 的 result 中取出业务数据。
 
     优先取 structuredContent；否则把 text 内容按 JSON 解析，解析不了就原样返回文本。
+
+    :param result: call_tool_raw 的返回值
+    :return: 业务数据（dict / list / str）
+    """
+    if result.get("structuredContent") is not None:
+        return result["structuredContent"]
+    text = "\n".join(c.get("text", "") for c in result.get("content", []) if c.get("type") == "text")
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return text
+
+
+def call_tool(session, name, arguments=None):
+    """
+    调用一个工具，返回解析后的业务数据；工具报错时抛 RuntimeError。
 
     :param session: 会话 dict
     :param name: 工具名，如 query-meals
     :param arguments: 工具参数 dict
     :return: 业务数据（dict / list / str）
     """
-    start = time.time()
-    result = _request(session, "tools/call", {"name": name, "arguments": arguments or {}})
-    cost = time.time() - start
+    result = call_tool_raw(session, name, arguments)
     if result.get("isError"):
         raise RuntimeError(f"工具调用失败: 工具={name}, 参数={json.dumps(arguments, ensure_ascii=False)}, "
                            f"返回={json.dumps(result.get('content'), ensure_ascii=False)[:500]}")
-    log(f"调用工具: 工具={name}, 耗时秒={cost:.2f}")
-    if result.get("structuredContent") is not None:
-        return result["structuredContent"]
-    texts = [c.get("text", "") for c in result.get("content", []) if c.get("type") == "text"]
-    text = "\n".join(texts)
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        return text
+    return parse_tool_result(result)
