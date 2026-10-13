@@ -2,6 +2,8 @@
 
 中文 | [English](README_EN.md)
 
+[![测试](https://github.com/a1840436478/mcd-guard/actions/workflows/test.yml/badge.svg)](https://github.com/a1840436478/mcd-guard/actions/workflows/test.yml) ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue) ![零依赖](https://img.shields.io/badge/dependencies-0-brightgreen) ![Linux | macOS | Windows](https://img.shields.io/badge/os-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey) [![MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 **把麦当劳账号交给 AI 之前，先装个刹车。**
 
 麦麦护栏是一个跑在你自己电脑上的麦当劳 MCP 安全层。AI 查菜单、算价格照常进行；一旦要**下单、取消订单、积分兑换、抽奖、领券、新增地址**，必须你在护栏窗口里亲手确认。它还可以设消费上限、开只读模式、记审计日志，Token 只留在你的电脑上。

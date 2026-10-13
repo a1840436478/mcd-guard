@@ -2,6 +2,8 @@
 
 [中文](README.md) | English
 
+[![测试](https://github.com/a1840436478/mcd-guard/actions/workflows/test.yml/badge.svg)](https://github.com/a1840436478/mcd-guard/actions/workflows/test.yml) ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue) ![零依赖](https://img.shields.io/badge/dependencies-0-brightgreen) ![Linux | macOS | Windows](https://img.shields.io/badge/os-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey) [![MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 **Put a brake on your AI before handing it your McDonald's account.**
 
 mcd-guard is a local, human-in-the-loop safety proxy for the official [McDonald's China MCP server](https://open.mcd.cn/mcp). It sits between your AI client and `https://mcp.mcd.cn`: read-only tools (menus, stores, price quotes) pass straight through, while every tool that changes your account — placing or cancelling orders, redeeming points, lottery draws, claiming coupons, adding addresses — must be approved by you, outside the AI's reach.
