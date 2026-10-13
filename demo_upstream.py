@@ -24,10 +24,14 @@ _ORDER_PROPS = {
     "items": {
         "type": "array",
         "description": "餐品列表",
-        "items": {"type": "object", "properties": {"productCode": {"type": "string"}, "quantity": {"type": "integer"}}},
+        "items": {"type": "object", "required": ["productCode", "quantity"], "properties": {
+            "productCode": {"type": "string", "description": "餐品编码，即 query-meals 返回的 code，如 D01"},
+            "quantity": {"type": "integer", "description": "数量"},
+        }},
     },
 }
-_STORE_ARGS = {"type": "object", "properties": {k: _ORDER_PROPS[k] for k in ("storeCode", "orderType", "beType")}}
+_REQUIRED = ["storeCode", "orderType", "beType"]
+_STORE_ARGS = {"type": "object", "properties": {k: _ORDER_PROPS[k] for k in _REQUIRED}, "required": _REQUIRED}
 
 DEMO_TOOLS = [
     {"name": "now-time-info", "description": "获取当前时间（演示）", "inputSchema": {"type": "object", "properties": {}}},
@@ -36,9 +40,10 @@ DEMO_TOOLS = [
     {"name": "query-meals", "description": "查询门店餐品菜单（演示）", "inputSchema": _STORE_ARGS},
     {"name": "query-my-coupons", "description": "查询我的优惠券（演示）", "inputSchema": {"type": "object", "properties": {}}},
     {"name": "calculate-price", "description": "订单试算价格（演示）",
-     "inputSchema": {"type": "object", "properties": _ORDER_PROPS}},
+     "inputSchema": {"type": "object", "properties": _ORDER_PROPS, "required": [*_REQUIRED, "items"]}},
     {"name": "create-order", "description": "创建订单（演示，不会产生真实订单）。下单前需征得用户同意",
-     "inputSchema": {"type": "object", "properties": {**_ORDER_PROPS, "takeWayCode": {"type": "string"}}}},
+     "inputSchema": {"type": "object", "properties": {**_ORDER_PROPS, "takeWayCode": {"type": "string"}},
+                     "required": [*_REQUIRED, "items"]}},
     {"name": "auto-bind-coupons", "description": "一键领取全部可领优惠券（演示）",
      "inputSchema": {"type": "object", "properties": {}}},
     {"name": "draw-lottery", "description": "积分抽奖（演示）", "inputSchema": {"type": "object", "properties": {}}},
@@ -90,7 +95,7 @@ def demo_call(name, arguments):
     if name in ("calculate-price", "create-order"):
         quote = _quote(arguments)
         if quote is None:
-            return _error("餐品编码不存在或数量不对（演示菜单只有 D01~D06）")
+            return _error("餐品编码不存在或数量不对：items 每项要有 productCode（D01~D06）和 quantity")
         if name == "calculate-price":
             return _result(quote)
         return _result({**quote, "orderId": "DEMO-ORDER", "tip": "演示订单，没有发给麦当劳，也不需要支付"})
