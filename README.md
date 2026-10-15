@@ -2,7 +2,7 @@
 
 中文 | [English](README_EN.md)
 
-[![测试](https://github.com/a1840436478/mcd-guard/actions/workflows/test.yml/badge.svg)](https://github.com/a1840436478/mcd-guard/actions/workflows/test.yml) ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue) ![零依赖](https://img.shields.io/badge/dependencies-0-brightgreen) ![Linux | macOS | Windows](https://img.shields.io/badge/os-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey) [![MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![测试](https://github.com/a1840436478/mcd-guard/actions/workflows/test.yml/badge.svg)](https://github.com/a1840436478/mcd-guard/actions/workflows/test.yml) ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue) ![零依赖](https://img.shields.io/badge/dependencies-0-brightgreen) ![Linux | macOS | Windows](https://img.shields.io/badge/os-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey) [![MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Glama](https://glama.ai/mcp/servers/a1840436478/mcd-guard/badges/score.svg)](https://glama.ai/mcp/servers/a1840436478/mcd-guard)
 
 **把麦当劳账号交给 AI 之前，先装个刹车。**
 
